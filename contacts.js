@@ -2,45 +2,52 @@ const fs = require('fs');
 const { promises: fsPromises } = fs;
 const path = require('path');
 
-const contactsPath = path.join(__dirname, './db/contacts.json');
+const contactsPath = path.join(__dirname, 'db', 'contacts.json');
 
 // TODO: задокументировать каждую функцию
 async function listContacts() {
   const data = await fsPromises.readFile(contactsPath, 'utf-8');
+  
+  const parsedData = JSON.parse(data);
 
-  console.table(data);
+  console.table(parsedData);
+  return parsedData;
 }
 
 async function getContactById(contactId) {
-  const data = await fsPromises.readFile(contactsPath, 'utf-8');
-  const parsedUsers = JSON.parse(data);
+  const data = await listContacts();
 
-  console.table(parsedUsers.find(user => user.id === contactId));
+  const foundUser = data.find(user => user.id === contactId);
+
+  console.table(foundUser);
+  return foundUser;
 }
 
 async function removeContact(contactId) {
-  const data = await fsPromises.readFile(contactsPath, 'utf-8');
-  const parsedUsers = JSON.parse(data);
-  const filteredUsers = parsedUsers.filter(user => user.id !== contactId);
+  const data = await listContacts();
+  const filteredUsers = data.filter(user => user.id !== contactId);
   const newUsersToString = JSON.stringify(filteredUsers);
 
   await fsPromises.writeFile(contactsPath, newUsersToString);
 }
 
 async function addContact(name, email, phone) {
-  const data = await fsPromises.readFile(contactsPath, 'utf-8');
-  const parsedUsers = JSON.parse(data);
-  const usersDataLength = parsedUsers.length;
+  const data = await listContacts();
+
   const newContact = {
-    id: usersDataLength + 1,
+    id: Math.floor(Math.random() * 100) + 1,
     name,
     email,
     phone,
   };
-  const newContacts = [...parsedUsers, newContact];
+
+  const newContacts = [...data, newContact];
   const newContactsToString = JSON.stringify(newContacts);
 
   await fsPromises.writeFile(contactsPath, newContactsToString);
+
+  const listWithNewUser = await listContacts();
+  return listWithNewUser;
 }
 
 module.exports = {
