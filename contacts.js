@@ -33,9 +33,15 @@ async function removeContact(contactId) {
 
 async function addContact(name, email, phone) {
   const data = await listContacts();
+  let lastId = 0;
+  data.forEach(item => {
+    if(item.id > lastId){
+      lastId = item.id
+    }
+  });
 
   const newContact = {
-    id: Math.floor(Math.random() * 100) + 1,
+    id: lastId + 1,
     name,
     email,
     phone,
