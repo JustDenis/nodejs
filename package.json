@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
+    "start": "nodemon ./src/start.js",
     "dev": "nodemon index.js"
   },
   "repository": {
@@ -19,9 +19,14 @@
   },
   "homepage": "https://github.com/JustDenis/nodejs#readme",
   "devDependencies": {
+    "morgan": "^1.10.0",
     "nodemon": "^2.0.6"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "joi": "^17.3.0",
     "yargs": "^16.1.0"
   }
 }
