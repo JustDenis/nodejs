@@ -1,59 +1,36 @@
 const Joi = require('joi');
 const fs = require('fs');
 const path = require('path');
+const contactsUtils = require('../contactsUtils');
 
 const { promises: fsPromises } = fs;
 const contactsPath = path.join(__dirname, '../', 'db', 'contacts.json');
 
 class ContactsController {
   async getContacts(_, res) {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
+    const contacts = await contactsUtils.listContacts();
 
-    res.status(200).send(contacts);
+    res.status(200).json(contacts);
   }
 
   async getContactById(req, res) {
     const contactId = parseInt(req.params.id);
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const parsedContacts = JSON.parse(contacts);
-
-    const foundContact = parsedContacts.find(
-      contact => contact.id === contactId,
-    );
+    const foundContact = await contactsUtils.getContactById(contactId);
 
     res.status(200).json(foundContact);
   }
 
   async addContact(req, res) {
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const parsedContacts = JSON.parse(contacts);
-    let lastId = 0;
-    parsedContacts.forEach(item => {
-      if (item.id > lastId) {
-        lastId = item.id;
-      }
-    });
+    const newContactList = await contactsUtils.addContact(req.body);
 
-    const contact = req.body;
-
-    const finalContact = {
-      id: lastId + 1,
-      ...contact,
-    };
-    const newContacts = [...parsedContacts, finalContact];
-    const newContactsToJson = JSON.stringify(newContacts);
-
-    await fsPromises.writeFile(contactsPath, newContactsToJson);
-
-    res.status(201).json(finalContact);
+    res.status(201).json(newContactList);
   }
 
   async removeContact(req, res) {
     const contactId = parseInt(req.params.id);
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const parsedContacts = JSON.parse(contacts);
+    const contacts = await contactsUtils.listContacts();
 
-    const foundContactIndex = parsedContacts.findIndex(
+    const foundContactIndex = contacts.findIndex(
       contact => contact.id === contactId,
     );
     if (foundContactIndex === -1) {
@@ -61,11 +38,7 @@ class ContactsController {
       return;
     }
 
-    const newContacts = parsedContacts.filter(
-      contact => contact.id !== contactId,
-    );
-    const newContactsToJson = JSON.stringify(newContacts);
-    await fsPromises.writeFile(contactsPath, newContactsToJson);
+    contactsUtils.removeContact(contactId);
 
     res.status(200).json({ message: 'Contact deleted' });
   }
@@ -77,20 +50,19 @@ class ContactsController {
     }
 
     const contactId = parseInt(req.params.id) - 1;
-    const contacts = await fsPromises.readFile(contactsPath, 'utf-8');
-    const parsedContacts = JSON.parse(contacts);
+    const contacts = await contactsUtils.listContacts();
 
-    if (!parsedContacts[contactId]) {
+    if (!contacts[contactId]) {
       res.status(404).json({ message: 'Contact not found' });
       return;
     }
 
-    const patchedContact = (parsedContacts[contactId] = {
-      ...parsedContacts[contactId],
+    const patchedContact = (contacts[contactId] = {
+      ...contacts[contactId],
       ...req.body,
     });
 
-    const newContactsToJson = JSON.stringify(parsedContacts);
+    const newContactsToJson = JSON.stringify(contacts);
     await fsPromises.writeFile(contactsPath, newContactsToJson);
 
     res.status(200).json(patchedContact);
