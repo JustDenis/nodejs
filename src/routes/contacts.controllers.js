@@ -17,7 +17,11 @@ class ContactsController {
     const contactId = parseInt(req.params.id);
     const foundContact = await contactsUtils.getContactById(contactId);
 
-    res.status(200).json(foundContact);
+    if(!foundContact){
+      return res.status(404).send({message: 'Contact not found'});
+    }
+
+    res.status(200).send(foundContact);
   }
 
   async addContact(req, res) {
@@ -49,30 +53,24 @@ class ContactsController {
       return;
     }
 
-    const contactId = parseInt(req.params.id) - 1;
-    const contacts = await contactsUtils.listContacts();
+    const contactId = parseInt(req.params.id);
+    const contact = await contactsUtils.getContactById(contactId);
 
-    if (!contacts[contactId]) {
+    if (!contact) {
       res.status(404).json({ message: 'Contact not found' });
       return;
     }
 
-    const patchedContact = (contacts[contactId] = {
-      ...contacts[contactId],
-      ...req.body,
-    });
-
-    const newContactsToJson = JSON.stringify(contacts);
-    await fsPromises.writeFile(contactsPath, newContactsToJson);
+    const patchedContact = await contactsUtils.updateContact(contactId, req.body);
 
     res.status(200).json(patchedContact);
   }
 
   validateCreateContact(req, res, next) {
     const createContactRules = Joi.object({
-      name: Joi.string().required(),
-      email: Joi.string().required(),
-      number: Joi.string().required(),
+      name: Joi.string().min(1).required(),
+      email: Joi.email().min(1).required(),
+      number: Joi.string().min(4).required(),
     });
 
     const result = createContactRules.validate(req.body);
@@ -87,9 +85,9 @@ class ContactsController {
 
   validatePatchUser(req, res, next) {
     const createContactRules = Joi.object({
-      name: Joi.string(),
-      email: Joi.string(),
-      number: Joi.string(),
+      name: Joi.string().min(1),
+      email: Joi.email().min(1),
+      number: Joi.string().min(4),
     });
 
     const result = createContactRules.validate(req.body);

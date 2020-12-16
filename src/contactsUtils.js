@@ -32,8 +32,8 @@ async function addContact(contact) {
   const data = await listContacts();
   let lastId = 0;
   data.forEach(item => {
-    if(item.id > lastId){
-      lastId = item.id
+    if (item.id > lastId) {
+      lastId = item.id;
     }
   });
 
@@ -51,9 +51,27 @@ async function addContact(contact) {
   return listWithNewUser;
 }
 
+async function updateContact(id, data) {
+  const contacts = await listContacts();
+  const contactId = contacts.findIndex(contact => contact.id === id);
+
+  console.log(contactId);
+
+  const patchedContact = (contacts[contactId] = {
+    ...contacts[contactId],
+    ...data,
+  });
+
+  const newContactsToJson = JSON.stringify(contacts);
+  await fsPromises.writeFile(contactsPath, newContactsToJson);
+
+  return patchedContact;
+}
+
 module.exports = {
   listContacts,
   getContactById,
   removeContact,
-  addContact
+  addContact,
+  updateContact,
 };
