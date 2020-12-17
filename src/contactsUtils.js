@@ -7,10 +7,8 @@ const contactsPath = path.join(__dirname, 'db', 'contacts.json');
 // TODO: задокументировать каждую функцию
 async function listContacts() {
   const data = await fsPromises.readFile(contactsPath, 'utf-8');
-  
   const parsedData = JSON.parse(data);
 
-  console.table(parsedData);
   return parsedData;
 }
 
@@ -19,7 +17,6 @@ async function getContactById(contactId) {
 
   const foundUser = data.find(user => user.id === contactId);
 
-  console.table(foundUser);
   return foundUser;
 }
 
@@ -31,20 +28,18 @@ async function removeContact(contactId) {
   await fsPromises.writeFile(contactsPath, newUsersToString);
 }
 
-async function addContact(name, email, phone) {
+async function addContact(contact) {
   const data = await listContacts();
   let lastId = 0;
   data.forEach(item => {
-    if(item.id > lastId){
-      lastId = item.id
+    if (item.id > lastId) {
+      lastId = item.id;
     }
   });
 
   const newContact = {
+    ...contact,
     id: lastId + 1,
-    name,
-    email,
-    phone,
   };
 
   const newContacts = [...data, newContact];
@@ -56,9 +51,32 @@ async function addContact(name, email, phone) {
   return listWithNewUser;
 }
 
+async function updateContact(id, data) {
+  const contacts = await listContacts();
+
+  const newContactsArray = contacts.map(contact => {
+    if(contact.id === id){
+      return contact = {
+        ...contact,
+        ...data,
+      }
+    }
+
+    return contact
+  });
+
+  const newContactsToJson = JSON.stringify(newContactsArray);
+  await fsPromises.writeFile(contactsPath, newContactsToJson);
+
+  const patchedContact = await getContactById(id);
+
+  return patchedContact;
+}
+
 module.exports = {
   listContacts,
   getContactById,
   removeContact,
-  addContact
+  addContact,
+  updateContact,
 };
