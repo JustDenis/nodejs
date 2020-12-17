@@ -53,17 +53,22 @@ async function addContact(contact) {
 
 async function updateContact(id, data) {
   const contacts = await listContacts();
-  const contactId = contacts.findIndex(contact => contact.id === id);
 
-  console.log(contactId);
+  const newContactsArray = contacts.map(contact => {
+    if(contact.id === id){
+      return contact = {
+        ...contact,
+        ...data,
+      }
+    }
 
-  const patchedContact = (contacts[contactId] = {
-    ...contacts[contactId],
-    ...data,
+    return contact
   });
 
-  const newContactsToJson = JSON.stringify(contacts);
+  const newContactsToJson = JSON.stringify(newContactsArray);
   await fsPromises.writeFile(contactsPath, newContactsToJson);
+
+  const patchedContact = await getContactById(id);
 
   return patchedContact;
 }
