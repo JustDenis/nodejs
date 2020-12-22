@@ -22,7 +22,7 @@ module.exports = class ContactsServer {
     this.server = express();
   }
 
-  initRoutes(){
+  initRoutes() {
     this.server.use('/api/contacts', contactsRouter);
   }
 
@@ -32,9 +32,13 @@ module.exports = class ContactsServer {
     this.server.use(cors({ origin: 'http://localhost:3000' }));
   }
 
-  async initDatabase(){
+  async initDatabase() {
     try {
-      await mongoose.connect(process.env.MONGODB_URL);
+      await mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useCreateIndex: true,
+      });
       console.log('Database connection successful');
     } catch (error) {
       console.log(error);

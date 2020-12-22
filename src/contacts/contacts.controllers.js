@@ -54,7 +54,7 @@ class ContactsController {
 
   async patchContact(req, res, next) {
     try {
-      const patchedContact = await contactModel.findContactByIdAndUpdate(
+      const patchedContact = await contactModel.updateContact(
         req.params.id,
         req.body,
       );

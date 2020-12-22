@@ -5,14 +5,14 @@ const contactSchema = new Schema({
   name: {type: String, required: true},
   email: {type: String, required: true, unique: true},
   phone: {type: String, required: true},
-  subscription: {type: String, required: false},
-  password: {type: String, required: false},
-  token: {type: String, required: false,}
+  subscription: {type: String},
+  password: {type: String, required: true},
+  token: {type: String}
 });
 
-contactSchema.statics.findContactByIdAndUpdate = findContactByIdAndUpdate;
+contactSchema.statics.updateContact = updateContact;
 
-async function findContactByIdAndUpdate(id, updateParams) {
+async function updateContact(id, updateParams) {
   return this.findByIdAndUpdate(
     id,
     {
