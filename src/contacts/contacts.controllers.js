@@ -2,8 +2,28 @@ const Joi = require('joi');
 const contactModel = require('./contacts.model');
 
 class ContactsController {
-  async getContacts(_, res, next) {
+  async getContacts(req, res, next) {
     try {
+      const { page, limit, sub } = req.query;
+
+      if (page && limit) {
+        const queryParams = sub? {subscription: sub} : {};
+        const options = {
+          page: Number(page),
+          limit: Number(limit),
+        };
+
+        contactModel.paginate(queryParams, options, function methodName(err, result) {
+          try {
+            const { docs } = result;
+            return res.status(200).send(docs);
+          } catch (error) {
+            next(err);
+          }
+        });
+        return;
+      }
+
       const contacts = await contactModel.find();
 
       return res.status(200).send(contacts);
@@ -76,8 +96,6 @@ class ContactsController {
       email: Joi.string().email().min(1).required(),
       phone: Joi.string().min(4).required(),
       subscription: Joi.string(),
-      password: Joi.string(),
-      token: Joi.string(),
     });
 
     const result = createContactRules.validate(req.body);
@@ -95,6 +113,7 @@ class ContactsController {
       name: Joi.string().min(1),
       email: Joi.string().email().min(1),
       phone: Joi.string().min(4),
+      subscription: Joi.string().valid('free', 'pro', 'premium'),
     });
 
     const result = createContactRules.validate(req.body);

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const contactsRouter = require('./contacts/contacts.routes');
+const userRouter = require('./users/users.routes');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -24,6 +25,7 @@ module.exports = class ContactsServer {
 
   initRoutes() {
     this.server.use('/api/contacts', contactsRouter);
+    this.server.use('/api/auth', userRouter);
   }
 
   initMiddlewares() {
