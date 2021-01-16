@@ -17,7 +17,7 @@ contactsRouter.delete('/:id', ContactsController.removeContact);
 
 contactsRouter.patch(
   '/:id',
-  ContactsController.validatePatchUser,
+  ContactsController.validatePatchСontact,
   ContactsController.patchContact,
 );
 

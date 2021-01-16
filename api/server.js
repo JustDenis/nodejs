@@ -25,7 +25,7 @@ module.exports = class ContactsServer {
 
   initRoutes() {
     this.server.use('/api/contacts', contactsRouter);
-    this.server.use('/api/auth', userRouter);
+    this.server.use('/api', userRouter);
   }
 
   initMiddlewares() {

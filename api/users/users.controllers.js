@@ -1,21 +1,10 @@
 const Joi = require('joi');
-const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('./users.model');
 const { UnauthorizedError } = require('../helpers/errors.constructors');
 
+
 class UsersController {
-  constructor() {
-    this.costFactor = 4;
-  }
-
-  get createUser() {
-    return this._createUser.bind(this);
-  }
-
-  get login() {
-    return this._login.bind(this);
-  }
 
   get logout() {
     return this._logout.bind(this);
@@ -25,7 +14,7 @@ class UsersController {
     return this._currentUser.bind(this);
   }
 
-  async _createUser(req, res, next) {
+  async createUser(req, res, next) {
     try {
       const { email, password } = req.body;
       const exsistingUser = await userModel.findUserByEmail(email);
@@ -36,24 +25,24 @@ class UsersController {
           .send({ message: 'User with same email already exist' });
       }
 
-      const passwordHash = await bcryptjs.hash(password, this.costFactor);
-      const user = await userModel.create({
+      const passwordHash = await userModel.hashPassword(password);
+      const {_id: id, email: userEmail, subscription, token} = await userModel.create({
         email,
         password: passwordHash,
       });
 
       return res.status(201).send({
-        id: user._id,
-        email: user.email,
-        subscription: user.subscription,
-        token: user.token,
+        id,
+        email: userEmail,
+        subscription,
+        token,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  async _login(req, res, next) {
+  async login(req, res, next) {
     try {
       const { email, password } = req.body;
       const user = await userModel.findUserByEmail(email);
@@ -62,7 +51,7 @@ class UsersController {
         throw new UnauthorizedError('Email or password is wrong');
       }
 
-      const token = await this.checkUser(password, user.password, user._id);
+      const token = await user.checkUser(password);
 
       res.status(200).send({
         token,
@@ -80,7 +69,7 @@ class UsersController {
   async _logout(req, res, next) {
     try {
       const user = req.user;
-      await userModel.updateToken(user._id, '');
+      await user.updateToken('');
 
       return res.status(204).send();
     } catch (error) {
@@ -88,54 +77,31 @@ class UsersController {
     }
   }
 
-  async _currentUser(req, res, next){
+  async _currentUser(req, res, next) {
     try {
-      const {_id, email, subscription} = req.user;
-      return res.status(200).send({id: _id, email, subscription});
+      const { _id, email, subscription } = req.user;
+      return res.status(200).send({ id: _id, email, subscription });
     } catch (error) {
       next(error);
     }
   }
 
-  async checkUser(password, userPassword, id) {
-    const isPasswordValid = await bcryptjs.compare(password, userPassword);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedError('Email or password is wrong');
-    }
-
-    const token = await jwt.sign({ id }, process.env.JWT_SECRET, {
-      expiresIn: 2 * 24 * 60 * 60,
-    });
-
-    await userModel.updateToken(id, token);
-
-    return token;
-  }
-
-  async authorize(req, res, next) {
+  async updateUser(req, res, next) {
     try {
-      const authorizationHeader = req.get('Authorization') || '';
-      const token = authorizationHeader.substr(7);
+      const jwtPayload = jwt.decode(req.user.token, { complete: true }).payload;
+      const updatedUser =  await userModel.findByIdAndUpdate(
+        jwtPayload.id,
+        {
+          $set: req.body,
+        },
+        {
+          new: true,
+        },
+      );
 
-      let userId;
-
-      try {
-        userId = await jwt.verify(token, process.env.JWT_SECRET).id;
-      } catch (error) {
-        return res.status(401).send({ message: 'Not authorized' });
-      }
-
-      const user = await userModel.findById(userId);
-
-      if (!user || user.token !== token) {
-        return res.status(401).send({ message: 'Not authorized' });
-      }
-
-      req.user = user;
-      req.token = token;
-
-      next();
+      console.log(updatedUser);
+  
+      return res.status(200).send(updatedUser);
     } catch (error) {
       next(error);
     }
@@ -151,6 +117,23 @@ class UsersController {
 
     if (result.error) {
       return res.status(400).send({ message: result.error.details[0].message });
+    }
+
+    next();
+  }
+
+  validateUpdateUser(req, res, next) {
+    const createContactRules = Joi.object({
+      email: Joi.string().email().min(1),
+      password: Joi.string().email().min(8),
+      subscription: Joi.string().valid('free', 'pro', 'premium'),
+    });
+
+    const result = createContactRules.validate(req.body);
+
+    if (result.error) {
+      res.status(400).send({ message: result.error.details[0].message });
+      return;
     }
 
     next();

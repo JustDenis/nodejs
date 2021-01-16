@@ -80,7 +80,6 @@ class ContactsController {
       );
 
       if (!patchedContact) {
-        console.log(patchedContact);
         return res.status(404).send({ message: 'Contact not found' });
       }
 
@@ -108,12 +107,12 @@ class ContactsController {
     next();
   }
 
-  validatePatchUser(req, res, next) {
+  validatePatchСontact(req, res, next) {
     const createContactRules = Joi.object({
       name: Joi.string().min(1),
       email: Joi.string().email().min(1),
       phone: Joi.string().min(4),
-      subscription: Joi.string().valid('free', 'pro', 'premium'),
+      subscription: Joi.string(),
     });
 
     const result = createContactRules.validate(req.body);
