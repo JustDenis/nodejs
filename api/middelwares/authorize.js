@@ -1,4 +1,4 @@
-const userModel = require('../users.model');
+const userModel = require('../users/users.model');
 
 exports.authorize = async function(req, res, next) {
   try {
@@ -8,7 +8,7 @@ exports.authorize = async function(req, res, next) {
     let userId;
 
     try {
-      userId = await userModel.verifyToken(token, process.env.JWT_SECRET).id;
+      userId = await userModel.verifyToken(token).id;
     } catch (error) {
       return res.status(401).send({ message: 'Not authorized' });
     }

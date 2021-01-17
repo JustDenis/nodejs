@@ -31,8 +31,8 @@ async function updateToken(newToken) {
   });
 }
 
-function verifyToken (token, secret) {
-  const result = jwt.verify(token, secret);
+function verifyToken (token) {
+  const result = jwt.verify(token, process.env.JWT_SECRET);
   return result;
 }
 
