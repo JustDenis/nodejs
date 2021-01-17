@@ -5,8 +5,8 @@ const userModel = require('../users.model');
 class UsersController {
   async currentUser(req, res, next) {
     try {
-      const { _id, email, subscription } = req.user;
-      return res.status(200).send({ id: _id, email, subscription });
+      const { email, subscription } = req.user;
+      return res.status(200).send({ email, subscription });
     } catch (error) {
       next(error);
     }
@@ -36,7 +36,7 @@ class UsersController {
   validateUpdateUser(req, res, next) {
     const createContactRules = Joi.object({
       email: Joi.string().email().min(1),
-      password: Joi.string().email().min(8),
+      password: Joi.string().min(8),
       subscription: Joi.string().valid('free', 'pro', 'premium'),
     });
 

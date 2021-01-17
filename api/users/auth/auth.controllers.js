@@ -26,10 +26,10 @@ class AuthController {
       });
 
       return res.status(201).send({
-        id,
-        email: userEmail,
-        subscription,
-        token,
+        user: {
+          email: userEmail,
+          subscription,
+        },
       });
     } catch (error) {
       next(error);
