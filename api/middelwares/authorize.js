@@ -1,6 +1,6 @@
 const userModel = require('../users/users.model');
 
-exports.authorize = async function(req, res, next) {
+module.exports = async function authorize(req, res, next) {
   try {
     const authorizationHeader = req.get('Authorization') || '';
     const [,token] = authorizationHeader.split(' ');
