@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const userModel = require('../users.model');
 const { UnauthorizedError } = require('../../helpers/errors.constructors');
+const generateAvatar = require('../../utils/avatar.generator');
 
 class AuthController {
   async createUser(req, res, next) {
@@ -15,20 +16,23 @@ class AuthController {
       }
 
       const passwordHash = await userModel.hashPassword(password);
+      const avatar = await generateAvatar();
+      const avatarUrl = `http://localhost:${process.env.PORT}/images/${avatar}`;
       const {
-        _id: id,
         email: userEmail,
         subscription,
-        token,
+        avatarUrl: avatarDB,
       } = await userModel.create({
         email,
         password: passwordHash,
+        avatarUrl,
       });
 
       return res.status(201).send({
         user: {
           email: userEmail,
           subscription,
+          avatarUrl: avatarDB,
         },
       });
     } catch (error) {

@@ -25,12 +25,26 @@ class UsersController {
         },
       );
 
-      console.log(updatedUser);
-
       return res.status(200).send(updatedUser);
     } catch (error) {
       next(error);
     }
+  }
+
+  async updateAvatar(req, res, next) {
+
+    const {filename} = req.file;
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {avatarUrl: `http://localhost:${process.env.PORT}/images/${filename}`},
+      },
+      {
+        new: true,
+      },
+    );
+    return res.status(200).send({avatarUrl: updatedUser.avatarUrl});
   }
 
   validateUpdateUser(req, res, next) {
