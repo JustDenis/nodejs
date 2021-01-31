@@ -22,4 +22,6 @@ authRouter.delete(
     AuthController.logout,
 );
 
+authRouter.get('/verify/:verificationToken', AuthController.verifyEmail);
+
 module.exports = authRouter;

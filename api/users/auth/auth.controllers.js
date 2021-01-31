@@ -2,6 +2,8 @@ const Joi = require('joi');
 const userModel = require('../users.model');
 const { UnauthorizedError } = require('../../helpers/errors.constructors');
 const generateAvatar = require('../../utils/avatar.generator');
+const uuid = require('uuid');
+const sendEmailVerification = require('../../utils/send.email.verification');
 
 class AuthController {
   async createUser(req, res, next) {
@@ -18,21 +20,23 @@ class AuthController {
       const passwordHash = await userModel.hashPassword(password);
       const avatar = await generateAvatar();
       const avatarUrl = `http://localhost:${process.env.PORT}/images/${avatar}`;
-      const {
-        email: userEmail,
-        subscription,
-        avatarUrl: avatarDB,
-      } = await userModel.create({
+      const user = await userModel.create({
         email,
         password: passwordHash,
         avatarUrl,
       });
 
+      const verificationToken = uuid.v4();
+
+      await user.createVerificationToken(verificationToken);
+
+      await sendEmailVerification(user.email, verificationToken);
+
       return res.status(201).send({
         user: {
-          email: userEmail,
-          subscription,
-          avatarUrl: avatarDB,
+          email: user.email,
+          subscription: user.subscription,
+          avatarUrl: user.avatarUrl,
         },
       });
     } catch (error) {
@@ -70,6 +74,24 @@ class AuthController {
       await user.updateToken('');
 
       return res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyEmail(req, res, next){
+    try {
+      const {verificationToken} = req.params;
+
+      const verifiedUser = await userModel.findByVerificationToken(verificationToken);
+
+      if(!verifiedUser){
+        return res.send(404).send("User not found!");
+      }
+
+      await verifiedUser.removeVerificationToken();
+
+      return res.status(200).send('Verified');
     } catch (error) {
       next(error);
     }

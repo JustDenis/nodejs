@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -5,7 +6,6 @@ const contactsRouter = require('./contacts/contacts.routes');
 const authRouter = require('./users/auth/auth.routes');
 const usersRouter = require('./users/user/users.routes');
 const mongoose = require('mongoose');
-require('dotenv').config();
 
 module.exports = class ContactsServer {
   constructor() {
